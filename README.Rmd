@@ -315,6 +315,28 @@ Let's practice running regression models with smooth functions on X. We need the
 
 - fit both a linear model and a spline model (use `gam()` with a cubic regression spline on wind speed). Summarize and plot the results from the models and interpret which model is the best fit and why.
 
+```{r }
+# filter out air pressure value st 1000 < val < 1020
+station_med_lt = lazy_dt(station_medians)
+station_med_lt = station_med_lt |>
+  filter(between(atm.press, 1000, 1020)) |>
+  collect()
+
+ggplot(station_med_lt, aes(x=atm.press, y=temp)) +
+  geom_point() +
+  geom_smooth(method="lm", col='cyan') +
+  geom_smooth(methof="gam", col='blue')
+
+```
+
 ```{r}
+# linear with temp being y, atm press being x
+lm_mod = lm(temp ~ atm.press, data=station_med_lt)
+summary(lm_mod)
+
+# bs = "cr" cubic regression line, 20 degree of freedom
+gam_mod <- gam(temp~s(atm.press, bs="cr", k=20), data=station_med_lt)
+summary(gam_mod)
+plot(gam_mod)
 
 ```
