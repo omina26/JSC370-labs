@@ -613,6 +613,40 @@ the most representative, the median, station per state. This time,
 instead of looking at one variable at a time, look at the euclidean
 distance. If multiple stations show in the median, select the one
 located at the lowest latitude.</p>
+<pre class="r"><code># Now we can compute the median per state
+station_medians[, temp_50 := quantile(temp, probs = .5, na.rm = TRUE), by = STATE]
+station_medians[, wind.sp_50 := quantile(wind.sp, probs = .5, na.rm=TRUE), by = STATE]
+# get the euclidean distance
+station_medians[, eudist := sqrt(
+  (temp - temp_50)^2 + (wind.sp - wind.sp_50)^2
+)]
+
+# Choose the most representative, the median, station per state with the lowest euclidean distance
+id_station = station_medians[ , .SD[which.min(eudist)], by = STATE]
+
+id_station = merge(
+  x = id_station, y = stations,
+  by.x = &quot;USAFID&quot;, by.y = &quot;USAF&quot;,
+  all.x = TRUE, all.y = FALSE
+)
+head(id_station)</code></pre>
+<pre><code>## Key: &lt;USAFID&gt;
+##    USAFID STATE.x  temp wind.sp atm.press        lon      lat temp_dist
+##     &lt;int&gt;  &lt;char&gt; &lt;num&gt;   &lt;num&gt;     &lt;num&gt;      &lt;num&gt;    &lt;num&gt;     &lt;num&gt;
+## 1: 720202      OR  17.0     1.5        NA -123.81700 45.41700       6.5
+## 2: 720386      MN  20.0     2.6        NA  -95.13300 45.11700       3.5
+## 3: 720388      WA  18.0     0.0        NA -122.28683 47.10383       5.5
+## 4: 720456      KY  23.0     2.1        NA  -83.98289 38.06666       0.5
+## 5: 720479      MO  23.0     2.6        NA  -94.01700 36.90000       0.5
+## 6: 720501      VA  23.5     1.5        NA  -76.88300 37.85000       0.0
+##    wind.sp_dist atm.press_dist temp_50 wind.sp_50    eudist   CTRY STATE.y
+##           &lt;num&gt;          &lt;num&gt;   &lt;num&gt;      &lt;num&gt;     &lt;num&gt; &lt;char&gt;  &lt;char&gt;
+## 1:          0.6             NA   17.50       1.80 0.5830952     US      OR
+## 2:          0.5             NA   19.50       2.60 0.5000000     US      MN
+## 3:          2.1             NA   18.00       0.00 0.0000000     US      WA
+## 4:          0.0             NA   23.15       2.10 0.1500000     US      KY
+## 5:          0.5             NA   23.15       2.35 0.2915476     US      MO
+## 6:          0.6             NA   23.50       1.50 0.0000000     US      VA</code></pre>
 <p>Knit the doc and save it on GitHub.</p>
 </div>
 <div id="question-3-in-the-middle" class="section level2">
